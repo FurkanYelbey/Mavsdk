@@ -99,6 +99,11 @@ int main(int argc, char** argv)//argc ve argv silindi
 		return 1;
 	}
 
+	if (download_result.second.mission_items.size() == 0) {
+		cerr << "No missions! Exiting...\n" << endl;
+		return 1;
+	}
+
 	cout << "Arming... \n";
 	const Action::Result arm_result = action.arm();
 	if (arm_result != Action::Result::Success) {
