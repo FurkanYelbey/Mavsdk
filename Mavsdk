@@ -39,13 +39,13 @@ shared_ptr<System> get_system(Mavsdk& mavsdk)
 	return fut.get();
 }
 
-int main()//argc ve argv silindi
+int main(int argc, char** argv)//argc ve argv silindi
 {
 
 	Mavsdk mavsdk;
 
-	const ConnectionResult connection_result = mavsdk.add_any_connection();//argv[1] silindi
-	if (connection_ressult != ConnectionResult::Success) {
+	const ConnectionResult connection_result = mavsdk.add_any_connection(argv[1]);//argv[1] silindi
+	if (connection_result != ConnectionResult::Success) {
 		cerr << "Connection failed: " << connection_result << '\n';
 		return 1;
 	}
@@ -54,9 +54,9 @@ int main()//argc ve argv silindi
 	if (!system) {
 		return 1;
 	}
-	auto action = Action{system};
-	auto mission = Mission{system};
-	auto telemetry = Telemetry{system};
+	auto action = Action{ system };
+	auto mission = Mission{ system };
+	auto telemetry = Telemetry{ system };
 
 	while (!telemetry.health_all_ok()) {
 		cout << "Waiting for system to be ready\n";
@@ -66,28 +66,27 @@ int main()//argc ve argv silindi
 	cout << "System ready\n";
 
 	cout << "Clearing mission from device" << '\n';
-		Mission::MissionPlan mission_plan{};
-		mission_plan.mission_items = mission_items;
-		const Mission::Result clear_result = mission.clear_mission(mission_plan);	
+	Mission::MissionPlan mission_plan{};
+	//mission_plan.mission_items = mission_items;
+	const Mission::Result clear_result = mission.clear_mission();
 
-		Result mavsdk::Mission::clear_mission(mission_plan) const
+	//mission.clear_mission();
 
-	if (clear_result != Mission::Result::Success) {
+		if (clear_result != Mission::Result::Success) {
 			cerr << "Clearing mission failed: " << clear_result << ", exiting.\n";
 			return 1;
-	}
+		}
 
 	cout << "Downloading mission from mission plan" << '\n';
 
-	//mission_plan.download_mission();
-	download_mission(mission_plan);
-	pair<Result, Mission::MissionPlan> mavsdk::Mission::download_mission(mission_plan) const;
+	//mission.download_mission();
+	pair<Mission::Result, Mission::MissionPlan> download_result = mission.download_mission();
 
-	/*/const pair<Mission::Result, Mission::MissionPlan> Mission::download_mission(mission_plan);
-	if (download_result != Mission::Result::Success) {
-		cerr << "Mission download failed: " << download_result << ", exiting.\n";
+	//const pair<Mission::Result, Mission::MissionPlan> Mission::download_mission();
+	if (download_result.first != Mission::Result::Success) {
+		cerr << "Mission download failed: " << download_result.first << ", exiting.\n";
 		return 1;
-	}*/
+	}
 
 	cout << "Arming... \n";
 	const Action::Result arm_result = action.arm();
@@ -107,8 +106,8 @@ int main()//argc ve argv silindi
 		if (mission_progress.current == mission_progress.total) {
 			prom.set_value();
 		}
-	});
-	
+		});
+
 	const Mission::Result start_mission_result = mission.start_mission();
 	if (start_mission_result != Mission::Result::Success) {
 		cerr << "Starting mission failed: " << start_mission_result << '\n';
@@ -126,7 +125,7 @@ int main()//argc ve argv silindi
 		cout << "Failed to command RTL: " << rtl_result << '\n';
 		return 1;
 	}
-	cout "Commanded RTL.\n";
+	cout << "Commanded RTL.\n" << endl;
 
 	//Biraz beklememiz gerekiyor yoksa armed durumu do?ru gerçekle?meyebilir
 	sleep_for(seconds(2));
