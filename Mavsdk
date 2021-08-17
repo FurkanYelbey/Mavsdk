@@ -28,6 +28,17 @@ shared_ptr<System> get_system(Mavsdk& mavsdk)
 	auto prom = promise<shared_ptr<System>>{};
 	auto fut = prom.get_future();
 
+	mavsdk.subscribe_on_new_system([&mavsdk, &prom]() {
+		auto system = mavsdk.systems().back();
+
+		if (system->has_autopilot()) {
+			cout << "Discovered autopilot\n" << endl;
+
+			mavsdk.subscribe_on_new_system(nullptr);
+			prom.set_value(system);
+		}
+	});
+
 	//genelde heartbeat'ler 1Hz'de al?n?r biz de sistemi bulmas?n?
 	//max 3 saniyede istiyoruz
 	if (fut.wait_for(seconds(3)) == future_status::timeout) {
