@@ -15,6 +15,8 @@ using namespace std;
 using std::chrono::seconds;
 using std::this_thread::sleep_for;
 
+
+
 void usage(const std::string& bin_name)
 {
 	cerr << "Usage : " << bin_name << " <connection_url>\n";
@@ -65,6 +67,7 @@ int main(int argc, char** argv)//argc ve argv silindi
 	if (!system) {
 		return 1;
 	}
+
 	auto action = Action{ system };
 	auto mission = Mission{ system };
 	auto telemetry = Telemetry{ system };
@@ -73,15 +76,12 @@ int main(int argc, char** argv)//argc ve argv silindi
 		cout << "Waiting for system to be ready\n";
 		sleep_for(seconds(1));
 	}
-
 	cout << "System ready\n";
-
 	cout << "Clearing mission from device" << endl;
 	Mission::MissionPlan mission_plan{};
-	//mission_plan.mission_items = mission_items;
 	const Mission::Result clear_result = mission.clear_mission();
 
-	//mission.clear_mission();
+
 
 		if (clear_result != Mission::Result::Success) {
 			cerr << "Clearing mission failed: " << clear_result << ", exiting.\n";
@@ -90,12 +90,19 @@ int main(int argc, char** argv)//argc ve argv silindi
 
 	cout << "Downloading mission from mission plan" << endl;
 
-	//mission.download_mission();
+
 	pair<Mission::Result, Mission::MissionPlan> download_result = mission.download_mission();
+	
+	
 
 	//const pair<Mission::Result, Mission::MissionPlan> Mission::download_mission();
 	if (download_result.first != Mission::Result::Success) {
 		cerr << "Mission download failed: " << download_result.first << ", exiting.\n";
+		return 1;
+	}
+
+	if (download_result.second.mission_items.size() == 0) {
+		cerr << "No missions! Exiting...\n" << endl;
 		return 1;
 	}
 
@@ -110,6 +117,7 @@ int main(int argc, char** argv)//argc ve argv silindi
 	auto prom = promise<void>{};
 	auto fut = prom.get_future();
 
+
 	//Görev ba?lamadan önce görev ilerleyi?ine subscribe oluyoruz
 	mission.subscribe_mission_progress([&prom](Mission::MissionProgress mission_progress) {
 		cout << "Mission progress update: " << mission_progress.current << " / "
@@ -118,13 +126,8 @@ int main(int argc, char** argv)//argc ve argv silindi
 			prom.set_value();
 		}
 		});
-		
-	if (download_result.second.mission_items.size() == 0) {
-		cerr << "No missions! Exiting...\n" << endl;
-		return 1;
-	}
 
-	const Mission::Result start_mission_result = mission.start_mission();
+	Mission::Result start_mission_result = mission.start_mission();
 	if (start_mission_result != Mission::Result::Success) {
 		cerr << "Starting mission failed: " << start_mission_result << endl;
 		return 1;
