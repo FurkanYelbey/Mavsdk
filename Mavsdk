@@ -77,25 +77,12 @@ int main(int argc, char** argv)//argc ve argv silindi
 		sleep_for(seconds(1));
 	}
 	cout << "System ready\n";
-	cout << "Clearing mission from device" << endl;
 	Mission::MissionPlan mission_plan{};
-	const Mission::Result clear_result = mission.clear_mission();
-
-
-
-		if (clear_result != Mission::Result::Success) {
-			cerr << "Clearing mission failed: " << clear_result << ", exiting.\n";
-			return 1;
-		}
 
 	cout << "Downloading mission from mission plan" << endl;
-
-
-	pair<Mission::Result, Mission::MissionPlan> download_result = mission.download_mission();
 	
-	
+	const pair<Mission::Result, Mission::MissionPlan> download_result = mission.download_mission();
 
-	//const pair<Mission::Result, Mission::MissionPlan> Mission::download_mission();
 	if (download_result.first != Mission::Result::Success) {
 		cerr << "Mission download failed: " << download_result.first << ", exiting.\n";
 		return 1;
@@ -106,6 +93,15 @@ int main(int argc, char** argv)//argc ve argv silindi
 		return 1;
 	}
 
+	cout << "Mission list: " << download_result.second << endl;
+	
+	const Mission::Result upload_result = mission.upload_mission(mission_plan);
+
+	if (upload_result != Mission::Result::Success) {
+		cerr << "Mission upload failed: " << upload_result << ", exiting. \n";
+		return 1;
+	}
+	
 	cout << "Arming... \n";
 	const Action::Result arm_result = action.arm();
 	if (arm_result != Action::Result::Success) {
@@ -155,5 +151,16 @@ int main(int argc, char** argv)//argc ve argv silindi
 	}
 	cout << "Disarmed, exiting.\n";
 
+	cout << "Clearing mission from device" << endl;
 
+	const Mission::Result clear_result = mission.clear_mission();
+
+
+
+	if (clear_result != Mission::Result::Success) {
+		cerr << "Clearing mission failed: " << clear_result << ", exiting.\n";
+		return 1;
+	}
+
+	
 }
