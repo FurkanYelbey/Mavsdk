@@ -57,11 +57,17 @@ int main(int argc, char** argv)//argc ve argv silindi
 
 	Mavsdk mavsdk;
 
-	const ConnectionResult connection_result = mavsdk.add_any_connection(argv[1]);//argv[1] silindi
+	string connection_url = "serial:///dev/ttyUSB0:57600";
+	ConnectionResult connection_result = mavsdk.add_any_connection(connection_url);
+
+
+
+
+	/*const ConnectionResult connection_result = mavsdk.add_serial_connection(const string & / dev / ttyUSB0, int baudrate= 57600);//argv[1] silindi
 	if (connection_result != ConnectionResult::Success) {
 		cerr << "Connection failed: " << connection_result << endl;
 		return 1;
-	}
+	}*/
 
 	auto system = get_system(mavsdk);
 	if (!system) {
